@@ -1,18 +1,9 @@
-# Clonar el repositorio
-git clone https://github.com/tu-usuario/predial-chatbot.git
-cd predial-chatbot
-
-# Ejecutar el chatbot
-python3 chatbot_predial.py
-#!/usr/bin/env python3
-# ============================================================
-# Chatbot: Verificador de límites del Impuesto Predial (Colombia)
+   # ============================================================
+# Chatbot: Verificador de límites del Impuesto Predial
 # Basado en: Preguntas_y_Reglas_Impuesto_Predial.docx
-# Aplica la Ley 44 de 1990 y la Ley 1995 de 2019
-#
-# Uso:
-#   python3 chatbot_predial.py
+# Ejecutar en Google Colab o en consola con Python 3.10+
 # ============================================================
+
 
 def preguntar_texto(mensaje):
     """Pide un dato de texto libre (no vacío)."""
@@ -23,14 +14,17 @@ def preguntar_texto(mensaje):
         print("Por favor escribe una respuesta.\n")
 
 
-def preguntar_numero(mensaje, permitir_decimales=True):
-    """Pide un número, validando que sea numérico y no negativo."""
+def preguntar_numero(mensaje, minimo=None, maximo=None, permitir_decimales=True):
+    """Pide un número, validando tipo, rango y que no sea negativo."""
     while True:
         respuesta = input(mensaje + "\n> ").strip().replace(",", "")
         try:
             valor = float(respuesta) if permitir_decimales else int(respuesta)
-            if valor < 0:
-                print("El valor no puede ser negativo.\n")
+            if minimo is not None and valor < minimo:
+                print(f"El valor no puede ser menor que {minimo}.\n")
+                continue
+            if maximo is not None and valor > maximo:
+                print(f"El valor no puede ser mayor que {maximo}.\n")
                 continue
             return valor
         except ValueError:
@@ -51,6 +45,7 @@ def preguntar_si_no(mensaje):
 
 
 def saludo_inicial():
+    """Muestra el banner de bienvenida y explica el propósito del chatbot."""
     print("=" * 64)
     print(" VERIFICADOR DEL IMPUESTO PREDIAL — LEY 44 DE 1990 Y LEY 1995 DE 2019")
     print("=" * 64)
@@ -71,15 +66,17 @@ def recopilar_datos():
 
     datos["anio_impuesto"] = int(preguntar_numero(
         "1. ¿En qué año corresponde el impuesto que desea revisar?",
-        permitir_decimales=False
+        minimo=1900, maximo=2100, permitir_decimales=False
     ))
 
     datos["impuesto_anterior"] = preguntar_numero(
-        "2. ¿Cuánto pagó de impuesto predial el año anterior? (en pesos)"
+        "2. ¿Cuánto pagó de impuesto predial el año anterior? (en pesos)",
+        minimo=0
     )
 
     datos["impuesto_actual"] = preguntar_numero(
-        "3. ¿Cuánto le están cobrando este año? (en pesos)"
+        "3. ¿Cuánto le están cobrando este año? (en pesos)",
+        minimo=0
     )
 
     datos["catastro_actualizado"] = preguntar_si_no(
@@ -92,6 +89,7 @@ def recopilar_datos():
         )
     else:
         datos["primer_cobro_actualizacion"] = False
+        print("  (Se asume 'No' para pregunta 5)\n")
 
     datos["es_formacion_catastral"] = preguntar_si_no(
         "6. ¿Su predio fue formado por primera vez en el catastro este año?"
@@ -127,14 +125,15 @@ def recopilar_datos():
 
     if datos["es_rural"]:
         datos["hectareas"] = preguntar_numero(
-            "14. ¿Cuántas hectáreas tiene el predio?"
+            "14. ¿Cuántas hectáreas tiene el predio?",
+            minimo=0
         )
     else:
         datos["hectareas"] = 0
 
     datos["estrato"] = int(preguntar_numero(
         "15. ¿A qué estrato pertenece su vivienda? (escriba 0 si no aplica)",
-        permitir_decimales=False
+        minimo=0, maximo=6, permitir_decimales=False
     ))
 
     datos["avaluo_menor_135_smmlv"] = preguntar_si_no(
@@ -142,10 +141,38 @@ def recopilar_datos():
     )
 
     datos["ipc"] = preguntar_numero(
-        "17. ¿Cuál fue el IPC (inflación) utilizado para ese año? (ej: 5.2 para 5.2%)"
+        "17. ¿Cuál fue el IPC (inflación) utilizado para ese año? (ej: 5.2 para 5.2%)",
+        minimo=0, maximo=100
     )
 
     return datos
+
+
+def confirmar_datos(datos):
+    """Muestra un resumen de las respuestas y pide confirmación."""
+    print("\n" + "-" * 64)
+    print(" RESUMEN DE TUS RESPUESTAS")
+    print("-" * 64)
+    print(f"  Año:                    {datos['anio_impuesto']}")
+    print(f"  Impuesto anterior:      ${datos['impuesto_anterior']:,.0f}")
+    print(f"  Impuesto este año:      ${datos['impuesto_actual']:,.0f}")
+    print(f"  IPC:                    {datos['ipc']}%")
+    print(f"  Estrato:                {datos['estrato']}")
+    print(f"  Rural:                  {'Sí' if datos['es_rural'] else 'No'}")
+    if datos["es_rural"]:
+        print(f"  Hectáreas:              {datos['hectareas']}")
+    print(f"  Actualizado catastral:  {'Sí' if datos['catastro_actualizado'] else 'No'}")
+    print(f"  Primer cobro post-act.: {'Sí' if datos['primer_cobro_actualizacion'] else 'No'}")
+    print(f"  Formación catastral:    {'Sí' if datos['es_formacion_catastral'] else 'No'}")
+    print(f"  Primera incorporación:  {'Sí' if datos['primera_incorporacion'] else 'No'}")
+    print(f"  Nueva construcción:     {'Sí' if datos['nueva_construccion'] else 'No'}")
+    print(f"  Lote sin edificar:      {'Sí' if datos['lote_sin_edificar'] else 'No'}")
+    print(f"  Autoavalúo:             {'Sí' if datos['usa_autoavaluo'] else 'No'}")
+    print(f"  Cambio destino:         {'Sí' if datos['cambio_destino'] else 'No'}")
+    print(f"  Cambio área:            {'Sí' if datos['cambio_area'] else 'No'}")
+    print(f"  Avalúo ≤135 SMMLV:      {'Sí' if datos['avaluo_menor_135_smmlv'] else 'No'}")
+    print("-" * 64)
+    return preguntar_si_no("¿Los datos son correctos?")
 
 
 def evaluar_predial(datos):
@@ -185,46 +212,53 @@ def evaluar_predial(datos):
 
     if datos["estrato"] in (1, 2) and datos["avaluo_menor_135_smmlv"]:
         tope = datos["impuesto_anterior"] * (1 + datos["ipc"] / 100)
-        detalle = (
-            f"Regla 2: vivienda de estrato {datos['estrato']} con avalúo <= 135 SMMLV. "
-            f"Tope máximo = impuesto anterior x (1 + IPC) = "
-            f"{datos['impuesto_anterior']:,.0f} x (1 + {datos['ipc']}%)."
-        )
-        regla = "Regla 2 — Estrato 1 o 2, avalúo <= 135 SMMLV"
+        return {
+            "regla": "Regla 2 — Estrato 1 o 2, avalúo <= 135 SMMLV",
+            "tope": tope,
+            "detalle": (
+                f"Regla 2: vivienda de estrato {datos['estrato']} con avalúo <= 135 SMMLV. "
+                f"Tope máximo = impuesto anterior x (1 + IPC) = "
+                f"${datos['impuesto_anterior']:,.0f} x (1 + {datos['ipc']:.1f}%)"
+            ),
+            "cumple": datos["impuesto_actual"] <= tope,
+        }
 
-    elif datos["catastro_actualizado"] and datos["primer_cobro_actualizacion"]:
+    if datos["catastro_actualizado"] and datos["primer_cobro_actualizacion"]:
         tope = datos["impuesto_anterior"] * 2
-        detalle = (
-            "Regla 5: es el primer cobro tras la actualización catastral. "
-            "Tope máximo = el doble (100%) del impuesto del año anterior."
-        )
-        regla = "Regla 5 — Primer cobro tras actualización catastral"
+        return {
+            "regla": "Regla 5 — Primer cobro tras actualización catastral",
+            "tope": tope,
+            "detalle": (
+                "Regla 5: es el primer cobro tras la actualización catastral. "
+                "Tope máximo = el doble (100%) del impuesto del año anterior."
+            ),
+            "cumple": datos["impuesto_actual"] <= tope,
+        }
 
-    elif datos["catastro_actualizado"]:
+    if datos["catastro_actualizado"]:
         incremento = datos["ipc"] + 8
         tope = datos["impuesto_anterior"] * (1 + incremento / 100)
-        detalle = (
-            f"Regla 3: predio actualizado catastralmente. "
-            f"Tope máximo = IPC + 8 puntos porcentuales = {incremento:.1f}%."
-        )
-        regla = "Regla 3 — Predio actualizado catastralmente"
+        return {
+            "regla": "Regla 3 — Predio actualizado catastralmente",
+            "tope": tope,
+            "detalle": (
+                f"Regla 3: predio actualizado catastralmente. "
+                f"Tope máximo = IPC + 8 puntos porcentuales = {incremento:.1f}%."
+            ),
+            "cumple": datos["impuesto_actual"] <= tope,
+        }
 
-    else:
-        tope = datos["impuesto_anterior"] * 1.5
-        detalle = "Regla 4: sin actualización catastral. El aumento no puede superar el 50%."
-        regla = "Regla 4 — Sin actualización catastral"
-
-    cumple = datos["impuesto_actual"] <= tope
-
+    tope = datos["impuesto_anterior"] * 1.5
     return {
-        "regla": regla,
+        "regla": "Regla 4 — Sin actualización catastral",
         "tope": tope,
-        "detalle": detalle,
-        "cumple": cumple,
+        "detalle": "Regla 4: sin actualización catastral. El aumento no puede superar el 50%.",
+        "cumple": datos["impuesto_actual"] <= tope,
     }
 
 
 def mostrar_resultado(datos, resultado):
+    """Imprime el resultado de la verificación con formato."""
     print("\n" + "=" * 64)
     print(" RESULTADO DE LA VERIFICACIÓN")
     print("=" * 64)
@@ -239,29 +273,74 @@ def mostrar_resultado(datos, resultado):
     else:
         print(f"\nTope máximo permitido este año: ${resultado['tope']:,.0f}")
         if resultado["cumple"]:
-            print("El cobro recibido SÍ respeta el límite legal.")
+            print("✓ El cobro recibido SÍ respeta el límite legal.")
         else:
-            print("El cobro recibido SUPERA el límite legal permitido.")
-            print("Podrías presentar un recurso de reconsideración ante tu municipio.")
+            diferencia = datos["impuesto_actual"] - resultado["tope"]
+            print("✗ El cobro recibido SUPERA el límite legal permitido.")
+            print(f"  Exceso: ${diferencia:,.0f}")
+            print("  Podrías presentar un recurso de reconsideración ante tu municipio.")
+    print("=" * 64)
+
+
+def mensaje_cierre():
+    """Muestra el mensaje de despedida."""
+    print("\n" + "=" * 64)
+    print(" GRACIAS POR USAR EL VERIFICADOR DE IMPUESTO PREDIAL")
     print("=" * 64)
     print(
-        "\nNota: Este resultado es una estimación basada únicamente en las\n"
-        "respuestas que diste. Los valores pueden variar según el avalúo\n"
-        "y la tarifa oficial vigente. Te recomendamos verificar tus datos\n"
-        "catastrales directamente en la Secretaría de Hacienda o la Oficina\n"
-        "de Catastro de tu municipio antes de tomar cualquier decisión."
+        "\nRecuerda que esta herramienta es orientativa y no sustituye\n"
+        "la asesoría de un abogado tributarista o la decisión oficial\n"
+        "de la Secretaría de Hacienda de tu municipio.\n\n"
+        "Si detectaste un posible exceso en tu cobro, puedes:\n"
+        "  1. Presentar un recurso de reconsideración (Art. 72, Estatuto Tributario).\n"
+        "  2. Acudir a la Inspección de Tributos Municipales.\n"
+        "  3. Consultar con un abogado especializado.\n\n"
+        "¡Mucho éxito! Vuelve a usar esta herramienta cuando la necesites.\n"
     )
     print("=" * 64)
 
 
 def ejecutar_chatbot():
+    """Orquesta todo el flujo del chatbot."""
     saludo_inicial()
-    datos = recopilar_datos()
+
+    while True:
+        datos = recopilar_datos()
+        if confirmar_datos(datos):
+            break
+        print("\nVolvamos a empezar.\n")
+
     resultado = evaluar_predial(datos)
     mostrar_resultado(datos, resultado)
+    mensaje_cierre()
+
     return datos, resultado
 
 
-# Ejecuta este archivo directamente para iniciar el chatbot:
 if __name__ == "__main__":
     ejecutar_chatbot()
+README.md:
+
+# Verificador de Impuesto Predial — Colombia
+
+Chatbot que verifica si el aumento del impuesto predial respeta los topes legales en Colombia, según la **Ley 44 de 1990** y la **Ley 1995 de 2019**.
+
+## Funcionamiento
+
+1. El usuario responde 17 preguntas sobre su predio y situación tributaria.
+2. El chatbot aplica las 5 reglas de decisión:
+   - **Regla 1:** Excepciones legales (sin límite de incremento).
+   - **Regla 2:** Estrato 1–2 con avalúo ≤ 135 SMMLV (tope = IPC).
+   - **Regla 3:** Predio actualizado catastralmente (tope = IPC + 8 puntos).
+   - **Regla 4:** Sin actualización catastral (tope = 50%).
+   - **Regla 5:** Primer cobro tras actualización (tope = 100%).
+3. Muestra si el cobro respeta o supera el límite legal.
+
+## Requisitos
+
+- Python 3.10 o superior
+
+## Ejecución
+
+```bash
+python chatbot.py
