@@ -1,4 +1,4 @@
-   # ============================================================
+# ============================================================
 # Chatbot: Verificador de límites del Impuesto Predial
 # Basado en: Preguntas_y_Reglas_Impuesto_Predial.docx
 # Ejecutar en Google Colab o en consola con Python 3.10+
@@ -50,13 +50,13 @@ def saludo_inicial():
     print(" VERIFICADOR DEL IMPUESTO PREDIAL — LEY 44 DE 1990 Y LEY 1995 DE 2019")
     print("=" * 64)
     print(
-        "\n¡Hola! Soy tu asistente para revisar si el aumento de tu impuesto\n"
+        "\n¡Hola! Soy tu Chatastro, el asistente virtual en Chat para revisar si el aumento de tu impuesto\n"
         "predial respeta los topes legales en Colombia.\n\n"
-        "Te voy a hacer una serie de preguntas sencillas. Al final te diré\n"
-        "cuál es el tope máximo que la ley permite y si el cobro que\n"
+        "Te voy a hacer una serie de preguntas sencillas, no olvides diligenciar esa información. Al final te diré\n"
+        "cuál es el tope máximo que la ley en Colombia permite y si el cobro que\n"
         "recibiste parece ajustarse a la norma.\n\n"
         "Esta herramienta es informativa: la decisión final siempre la\n"
-        "tiene la Secretaría de Hacienda de tu municipio.\n"
+        "tiene la Secretaría de Hacienda de su municipio, compare y consulta este resultado.\n"
     )
 
 
@@ -290,7 +290,7 @@ def mensaje_cierre():
     print(
         "\nRecuerda que esta herramienta es orientativa y no sustituye\n"
         "la asesoría de un abogado tributarista o la decisión oficial\n"
-        "de la Secretaría de Hacienda de tu municipio.\n\n"
+        "de la Secretaría de Hacienda de su municipio.\n\n"
         "Si detectaste un posible exceso en tu cobro, puedes:\n"
         "  1. Presentar un recurso de reconsideración (Art. 72, Estatuto Tributario).\n"
         "  2. Acudir a la Inspección de Tributos Municipales.\n"
@@ -319,28 +319,3 @@ def ejecutar_chatbot():
 
 if __name__ == "__main__":
     ejecutar_chatbot()
-README.md:
-
-# Verificador de Impuesto Predial — Colombia
-
-Chatbot que verifica si el aumento del impuesto predial respeta los topes legales en Colombia, según la **Ley 44 de 1990** y la **Ley 1995 de 2019**.
-
-## Funcionamiento
-
-1. El usuario responde 17 preguntas sobre su predio y situación tributaria.
-2. El chatbot aplica las 5 reglas de decisión:
-   - **Regla 1:** Excepciones legales (sin límite de incremento).
-   - **Regla 2:** Estrato 1–2 con avalúo ≤ 135 SMMLV (tope = IPC).
-   - **Regla 3:** Predio actualizado catastralmente (tope = IPC + 8 puntos).
-   - **Regla 4:** Sin actualización catastral (tope = 50%).
-   - **Regla 5:** Primer cobro tras actualización (tope = 100%).
-3. Muestra si el cobro respeta o supera el límite legal.
-
-## Requisitos
-
-- Python 3.10 o superior
-
-## Ejecución
-
-```bash
-python chatbot.py
