@@ -1,6 +1,17 @@
-# Calculadora-Castastral
+# Clonar el repositorio
+git clone https://github.com/tu-usuario/predial-chatbot.git
+cd predial-chatbot
+
+# Ejecutar el chatbot
+python3 chatbot_predial.py
+#!/usr/bin/env python3
+# ============================================================
+# Chatbot: Verificador de límites del Impuesto Predial (Colombia)
 # Basado en: Preguntas_y_Reglas_Impuesto_Predial.docx
-# Pensado para ejecutarse en una celda de Google Colab
+# Aplica la Ley 44 de 1990 y la Ley 1995 de 2019
+#
+# Uso:
+#   python3 chatbot_predial.py
 # ============================================================
 
 def preguntar_texto(mensaje):
@@ -233,6 +244,14 @@ def mostrar_resultado(datos, resultado):
             print("El cobro recibido SUPERA el límite legal permitido.")
             print("Podrías presentar un recurso de reconsideración ante tu municipio.")
     print("=" * 64)
+    print(
+        "\nNota: Este resultado es una estimación basada únicamente en las\n"
+        "respuestas que diste. Los valores pueden variar según el avalúo\n"
+        "y la tarifa oficial vigente. Te recomendamos verificar tus datos\n"
+        "catastrales directamente en la Secretaría de Hacienda o la Oficina\n"
+        "de Catastro de tu municipio antes de tomar cualquier decisión."
+    )
+    print("=" * 64)
 
 
 def ejecutar_chatbot():
@@ -243,6 +262,6 @@ def ejecutar_chatbot():
     return datos, resultado
 
 
-# En Colab, ejecuta esta celda y luego llama a la función:
+# Ejecuta este archivo directamente para iniciar el chatbot:
 if __name__ == "__main__":
     ejecutar_chatbot()
